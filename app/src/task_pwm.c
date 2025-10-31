@@ -52,6 +52,8 @@
 
 #define STEP (2048)
 #define PERIOD (65535)
+#define MIN_ADC_VALUE (1200)
+#define MAX_ADC_VALUE (3300)
 
 /********************** internal data declaration ****************************/
 
@@ -60,6 +62,11 @@ void setPWM(TIM_HandleTypeDef timer,
             uint32_t channel,
             uint16_t period,
             uint16_t pulse);
+float fmap(float x,
+		   float in_min,
+		   float in_max,
+		   float out_min,
+		   float out_max);
 
 /********************** internal data definition *****************************/
 const char *p_task_pwm 		= "Task PWM";
@@ -82,13 +89,21 @@ void task_pwm_update(void *parameters)
 {
 
 	static uint16_t period=PERIOD;
-	static int16_t step = STEP;
+	//static int16_t step = STEP;
 
 	shared_data_type *shared_data = (shared_data_type *) parameters;
 
 	if ( shared_data->adc_end_of_conversion ) {
 		shared_data->adc_end_of_conversion = false;
+
+		shared_data->pwm_active = fmap(shared_data->adc_value,
+									   MIN_ADC_VALUE,
+									   MAX_ADC_VALUE,
+									   PERIOD,
+									   0);
+
 		setPWM(htim3, TIM_CHANNEL_1, period, shared_data->pwm_active);
+		/*
 		if ( step>0 ) {
 			if ( period-step<=shared_data->pwm_active ) {
 				step = step * -1;
@@ -100,9 +115,18 @@ void task_pwm_update(void *parameters)
 			}
 		}
 		shared_data->pwm_active = shared_data->pwm_active + step;
+		*/
 	}
 }
 
+float fmap(float x, float in_min, float in_max, float out_min, float out_max)
+{
+	if(in_min > x)
+		return out_min;
+	if(in_max < x)
+		return out_max;
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 void setPWM(TIM_HandleTypeDef timer, uint32_t channel,
             uint16_t period, uint16_t pulse) {

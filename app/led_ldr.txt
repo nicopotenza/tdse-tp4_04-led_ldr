@@ -1,0 +1,12 @@
+LDR
+Valor iluminación	~= 100 kOhm
+Valor oscuridad		~= 1.2 MOhm
+
+Se utilizó una resistencia de 1MOhm para el divisor resistivo.
+Se tomaron los valores mínimo y máximo de medición ADC. Estos se almacenaron en constantes:
+
+#define MIN_ADC_VALUE (1200)
+#define MAX_ADC_VALUE (3300)
+
+Se usaron esos valores para alimentar una función fmap, la cual toma el valor medido del ADC y lo convierte al rango del PWM.
+
